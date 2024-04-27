@@ -1,11 +1,15 @@
-#include <stdio.h>
-#include <stdlib.h>
+//=============================================================================
+// This class sends raw ethernet frames to a NIC using the raw sockets API
+//
+// Author: D. Wolf
+//=============================================================================
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <net/if.h>
-
 #include <linux/if_packet.h>
 #include "raw_nic.h"
 

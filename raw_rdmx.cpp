@@ -1,12 +1,12 @@
 //=============================================================================
-// raw_udp.cpp - Class for managing raw Ethernet/IPv4/UDP headers
+// raw_rdmx.cpp - Class for managing raw Ethernet/IPv4/UDP/RDMX headers
 //
 // Author: D. Wolf
 //=============================================================================
 #include <cstring>
 #include <cassert>
 #include <arpa/inet.h>
-#include "raw_udp.h"
+#include "raw_rdmx.h"
 
 #pragma pack(push, 1)
 
@@ -39,15 +39,29 @@ struct udp_hdr_t
     uint16_t    checksum;
 };
 
-struct raw_udp_t
+struct rdmx_hdr_t
+{
+    uint16_t    magic;
+    uint64_t    target_addr;
+    uint8_t     reserve[12];    
+};
+
+struct raw_rdmx_t
 {
     eth_hdr_t   eth;
     ipv4_hdr_t  ipv4;
     udp_hdr_t   udp;
+    rdmx_hdr_t  rdmx;
 };
 
-
 #pragma pack(pop)
+
+//=============================================================================
+// This is a 64-bit version of htonl
+//=============================================================================
+#define htonll(x) ((1==htonl(1)) ? (x) : ((uint64_t)htonl((x) & 0xFFFFFFFF) << 32) | htonl((x) >> 32))
+//=============================================================================
+
 
 //=============================================================================
 // ipv4_checksum() - Computes the 16-bit checksum of an IPv4 header
@@ -81,21 +95,22 @@ static uint16_t ipv4_checksum(ipv4_hdr_t& header)
 
 
 //=============================================================================
-// CRawUDP - Default constructor
+// CRawRDMX - Default constructor
 //=============================================================================
-CRawUDP::CRawUDP()
+CRawRDMX::CRawRDMX()
 {
     // Ensure that the structures are the expected sizes
     assert(sizeof(eth_hdr_t ) == 14);
     assert(sizeof(ipv4_hdr_t) == 20);
     assert(sizeof(udp_hdr_t ) ==  8);
-    assert(sizeof(raw_udp_t ) == 42);
+    assert(sizeof(rdmx_hdr_t) == 22);
+    assert(sizeof(raw_rdmx_t) == 64);
 
     // Set the entire frame header template to all zeros
     memset(frame_, 0, sizeof(frame_));
 
     // Create a handy structure reference to the frame header template
-    raw_udp_t& frame = *(raw_udp_t*)frame_;
+    raw_rdmx_t& frame = *(raw_rdmx_t*)frame_;
 
     // Set the Ethernet frame type to "IPv4"
     frame.eth.frame_type = htons(0x0800);
@@ -114,6 +129,9 @@ CRawUDP::CRawUDP()
 
     // The UDP checksum is always 0
     frame.udp.checksum = 0;
+
+    // Magic number that identifies an RDMX packet
+    frame.rdmx.magic = htons(0x0122);
 }
 //=============================================================================
 
@@ -122,12 +140,12 @@ CRawUDP::CRawUDP()
 // set_mac_addrs() - Defines the source and destination MAC address for the
 //                   Ethernet frame
 //=============================================================================
-void CRawUDP::set_mac_addrs(void* src_mac, void* dst_mac)
+void CRawRDMX::set_mac_addrs(void* src_mac, void* dst_mac)
 {
     unsigned char broadcast_mac[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
     // Create a handy structure reference to the frame header template
-    raw_udp_t& frame = *(raw_udp_t*)frame_;
+    raw_rdmx_t& frame = *(raw_rdmx_t*)frame_;
 
     // If the caller didn't give us a dst_mac, we will target this 
     // ethernet frame to the ethernet-broadcast address
@@ -144,10 +162,10 @@ void CRawUDP::set_mac_addrs(void* src_mac, void* dst_mac)
 // set_ip_addrs() - Defines the source and destination IP address for the
 //                  IPv4 packet
 //=============================================================================
-void CRawUDP::set_ip_addrs(void* src_ip, void* dst_ip)
+void CRawRDMX::set_ip_addrs(void* src_ip, void* dst_ip)
 {
     // Create a handy structure reference to the frame header template
-    raw_udp_t& frame = *(raw_udp_t*)frame_;
+    raw_rdmx_t& frame = *(raw_rdmx_t*)frame_;
 
     // Copy the IP addresses into the frame header template
     memcpy(frame.ipv4.src_ip, src_ip, 4);
@@ -159,10 +177,10 @@ void CRawUDP::set_ip_addrs(void* src_ip, void* dst_ip)
 //=============================================================================
 // set_udp_ports() - Defines the source and UDP ports for the UDP datagram
 //=============================================================================
-void CRawUDP::set_udp_ports(uint16_t src_port, uint16_t dst_port)
+void CRawRDMX::set_udp_ports(uint16_t src_port, uint16_t dst_port)
 {
     // Create a handy structure reference to the frame header template
-    raw_udp_t& frame = *(raw_udp_t*)frame_;
+    raw_rdmx_t& frame = *(raw_rdmx_t*)frame_;
 
     // Store the UDP port numbers into the frame header template
     frame.udp.src_port = htons(src_port);
@@ -174,27 +192,34 @@ void CRawUDP::set_udp_ports(uint16_t src_port, uint16_t dst_port)
 //=============================================================================
 // write_header() - Writes out a complete Ethernet/IPv4/UDP header
 //=============================================================================
-void CRawUDP::write_header(void* where, uint16_t payload_length)
+void CRawRDMX::write_header(void* where, uint16_t payload_length, 
+                                         uint64_t target_addr)
 {
     // Copy the frame header template into the caller's buffer
     memcpy(where, frame_, sizeof(frame_));    
 
     // Create a handy structure reference to the caller's frame header
-    raw_udp_t& frame = *(raw_udp_t*)where;
+    raw_rdmx_t& frame = *(raw_rdmx_t*)where;
 
     // Compute the length of the IPv4 packet
     uint16_t ip4_length = sizeof(ipv4_hdr_t)
-                        + sizeof(udp_hdr_t)
+                        + sizeof(udp_hdr_t )
+                        + sizeof(rdmx_hdr_t)
                         + payload_length;
     
     // Compute the length of the UDP datagram
-    uint16_t udp_length = sizeof(udp_hdr_t) + payload_length;
+    uint16_t udp_length = sizeof(udp_hdr_t )
+                        + sizeof(rdmx_hdr_t)
+                        + payload_length;
 
     // Store the lengths into the caller's frame header
     frame.ipv4.length = htons(ip4_length);
     frame.udp.length  = htons(udp_length);
 
-    // Write the IPv4 checksum into the frame header
+    // Store the IPv4 checksum into the frame header
     frame.ipv4.checksum = htons(ipv4_checksum(frame.ipv4));
+
+    // Store the RDMX target address into the frame header
+    frame.rdmx.target_addr = htonll(target_addr);
 }
 //=============================================================================

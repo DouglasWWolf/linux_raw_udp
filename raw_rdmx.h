@@ -32,7 +32,7 @@ public:
     // Call this to define the source and destination UDP ports
     void    set_udp_ports(uint16_t src_port, uint16_t dst_port = 11111);
 
-    // Call this to write out a valid Ethernet/IPv4/UDP header
+    // Call this to write out a valid Ethernet/IPv4/UDP/RDMX header
     void    write_header(void* where, uint16_t payload_length, uint64_t target_addr);
 
 protected:

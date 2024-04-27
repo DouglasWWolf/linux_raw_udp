@@ -44,18 +44,18 @@ static void dump(void* data, int length)
 void CRawNIC::connect_nic(const char* nic_name)
 {
     // Open raw socket to send on
-	m_sd = socket(AF_PACKET, SOCK_RAW, IPPROTO_RAW);
+    m_sd = socket(AF_PACKET, SOCK_RAW, IPPROTO_RAW);
 
     // If the open failed, barf
     if (m_sd == -1)
     {
-	    perror("socket");
+        perror("socket");
         exit(1);
-	}
+    }
 
     struct ifreq if_data;
 
-  	// Clear the structure that will hold our network interface information
+    // Clear the structure that will hold our network interface information
     memset(&if_data, 0, sizeof(if_data));
 	
     // Stuff the network interface name into the network interface info structure
@@ -70,7 +70,6 @@ void CRawNIC::connect_nic(const char* nic_name)
 
     // And save the index of the user-specified network interface
     m_if_idx = if_data.ifr_ifindex;
-
 }
 //=============================================================================
 
@@ -94,7 +93,6 @@ void CRawNIC::send(const void* frame, uint16_t frame_length)
     // Send the packet to the network interface
     int rc = sendto(m_sd, frame, frame_length, 0, (sockaddr*)&socket_address,
                                                    sizeof(socket_address));
-
     if (rc < 1)
     {
         printf("sendto failed\n");        

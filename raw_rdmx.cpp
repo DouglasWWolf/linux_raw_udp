@@ -43,7 +43,7 @@ struct rdmx_hdr_t
 {
     uint16_t    magic;
     uint64_t    target_addr;
-    uint8_t     reserve[12];    
+    uint8_t     reserved[12];    
 };
 
 struct raw_rdmx_t

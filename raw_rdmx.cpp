@@ -140,7 +140,7 @@ CRawRDMX::CRawRDMX()
 // set_mac_addrs() - Defines the source and destination MAC address for the
 //                   Ethernet frame
 //=============================================================================
-void CRawRDMX::set_mac_addrs(void* src_mac, void* dst_mac)
+void CRawRDMX::set_mac_addrs(const void* src_mac, const void* dst_mac)
 {
     unsigned char broadcast_mac[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
@@ -162,7 +162,7 @@ void CRawRDMX::set_mac_addrs(void* src_mac, void* dst_mac)
 // set_ip_addrs() - Defines the source and destination IP address for the
 //                  IPv4 packet
 //=============================================================================
-void CRawRDMX::set_ip_addrs(void* src_ip, void* dst_ip)
+void CRawRDMX::set_ip_addrs(const void* src_ip, const void* dst_ip)
 {
     // Create a handy structure reference to the frame header template
     raw_rdmx_t& frame = *(raw_rdmx_t*)frame_;

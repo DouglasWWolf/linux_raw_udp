@@ -122,7 +122,7 @@ CRawUDP::CRawUDP()
 // set_mac_addrs() - Defines the source and destination MAC address for the
 //                   Ethernet frame
 //=============================================================================
-void CRawUDP::set_mac_addrs(void* src_mac, void* dst_mac)
+void CRawUDP::set_mac_addrs(const void* src_mac, const void* dst_mac)
 {
     unsigned char broadcast_mac[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
@@ -144,7 +144,7 @@ void CRawUDP::set_mac_addrs(void* src_mac, void* dst_mac)
 // set_ip_addrs() - Defines the source and destination IP address for the
 //                  IPv4 packet
 //=============================================================================
-void CRawUDP::set_ip_addrs(void* src_ip, void* dst_ip)
+void CRawUDP::set_ip_addrs(const void* src_ip, const void* dst_ip)
 {
     // Create a handy structure reference to the frame header template
     raw_udp_t& frame = *(raw_udp_t*)frame_;

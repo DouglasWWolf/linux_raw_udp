@@ -24,10 +24,10 @@ public:
 
     // Call this to define source and destination MAC addresses.  If dst_mac
     // is "nullptr", it will be set to the broadcoast MAC (FF:FF:FF:FF:FF:FF)
-    void    set_mac_addrs(void* src_mac, void* dst_mac = nullptr);
+    void    set_mac_addrs(const void* src_mac, const void* dst_mac = nullptr);
 
     // Call this to define the source and destination IP addresses.
-    void    set_ip_addrs(void* src_ip, void* dst_ip);
+    void    set_ip_addrs(const void* src_ip, const void* dst_ip);
 
     // Call this to define the source and destination UDP ports
     void    set_udp_ports(uint16_t src_port, uint16_t dst_port = 11111);

@@ -122,7 +122,7 @@ void demonstrate_rdmx_frame()
     // This is the RDMX target address where the receiver will store the packet
     const uint64_t TARGET_ADDRESS = 0x123456789abcdef0LL;
  
-    // Stamp an Ethernet/IPv4/UDP header into 'ethernet_frame'
+    // Stamp an Ethernet/IPv4/UDP/RDMX header into 'ethernet_frame'
     rdmx_frame_header.write_header(ethernet_frame, PAYLOAD_LEN, TARGET_ADDRESS);
 
     // For demo purposes, stuff a simple payload into 'ethernet_frame'

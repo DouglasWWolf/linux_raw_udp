@@ -37,7 +37,7 @@ public:
 
 protected:
 
-    // This will contain the template for the Ethernet/IPv4/UDP frame
+    // This will contain the template for the Ethernet/IPv4/UDP/RDMX frame
     unsigned char frame_[64];
 };
 
